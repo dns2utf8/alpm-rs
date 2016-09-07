@@ -1,0 +1,7 @@
+[package]
+name = "alpm"
+version = "0.1.0"
+authors = ["vp"]
+
+[dependencies]
+libloading = "0.3"
