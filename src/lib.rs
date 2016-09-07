@@ -10,14 +10,14 @@ extern {
   struct alpm_errno_t;
 }*/
 
-struct Alpm {
+pub struct Alpm {
   lib: so::Library,
   handle: *const usize,
   error_no: Box<usize>,
 }
 
 impl Alpm {
-  fn new() -> Result<Alpm, std::io::Error> {
+  pub fn new() -> Result<Alpm, std::io::Error> {
     let lib = try!(so::Library::new("/usr/lib/libalpm.so"));
 
     let root = CString::new("/").unwrap();
@@ -36,7 +36,7 @@ impl Alpm {
     })
   }
 
-  fn query_package_version<S>(&self, s: S) -> String where S: Into<String> {
+  pub fn query_package_version<S>(&self, s: S) -> String where S: Into<String> {
     /*unsafe {
       self.get(b"query...\0")
     }*/
@@ -51,6 +51,7 @@ impl Drop for Alpm {
       let alpm_release: Symbol<unsafe extern fn(*const usize) -> *const usize> = self.lib.get(b"alpm_release\0").unwrap();
       alpm_release(self.handle);
     }
+    assert!(0 == *self.error_no, "Alpm: an error occured: {}", self.error_no);
   }
 }
 
