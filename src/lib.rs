@@ -91,7 +91,7 @@ impl Alpm {
     let lib = try!(so::Library::new("/usr/lib/libalpm.so"));
 
     let root = CString::new("/").unwrap();
-    let dbpath = CString::new("/var/lib/pacman/sync").unwrap();
+    let dbpath = CString::new("/var/lib/pacman/").unwrap();
     let mut error_no = Box::new(0);
     let handle = unsafe {
       let init: Symbol<unsafe extern fn(*const c_char, *const c_char, *mut usize) -> *const usize> = try!(lib.get(b"alpm_initialize\0"));
