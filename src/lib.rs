@@ -111,12 +111,70 @@ impl Alpm {
     })
   }
 
-  pub fn query_package_version<S>(&self, s: S) -> String where S: Into<String> {
-    /*unsafe {
-      self.get(b"query...\0")
-    }*/
+  pub fn query_package_version<S>(&self, s: S) -> std::io::Result<String> where S: Into<String> {
     let s: String = s.into();
-    s
+    let mut cs = s.into_bytes();
+    cs.push(0);
+
+    unsafe {
+      // /** Get the database of locally installed packages.
+      //  * The returned pointer points to an internal structure
+      //  * of libalpm which should only be manipulated through
+      //  * libalpm functions.
+      //  * @return a reference to the local database
+      //  */
+      // alpm_db_t *alpm_get_localdb(alpm_handle_t *handle);
+      let get_db: Symbol<fn(*const usize) -> *const usize> = try!( self.lib.get(b"alpm_get_localdb") );
+
+      // /** Get the list of sync databases.
+      //  * Returns a list of alpm_db_t structures, one for each registered
+      //  * sync database.
+      //  * @param handle the context handle
+      //  * @return a reference to an internal list of alpm_db_t structures
+      //  */
+      // alpm_list_t *alpm_get_syncdbs(alpm_handle_t *handle);
+
+      // /** Get the package cache of a package database.
+      //  * @param db pointer to the package database to get the package from
+      //  * @return the list of packages on success, NULL on error
+      //  */
+      // alpm_list_t *alpm_db_get_pkgcache(alpm_db_t *db);
+      let db_get_pkgcache: Symbol<fn(*const usize) -> *const usize> = try!( self.lib.get(b"alpm_db_get_pkgcache") );
+
+      // /** Searches a database with regular expressions.
+      //  * @param db pointer to the package database to search in
+      //  * @param needles a list of regular expressions to search for
+      //  * @return the list of packages matching all regular expressions on success, NULL on error
+      //  */
+      // alpm_list_t *alpm_db_search(alpm_db_t *db, const alpm_list_t *needles);
+      //let db_search: Symbol<fn(*const usize, *const usize) -> *const usize> = try!( self.lib.get(b"alpm_db_search") );
+
+      // /** Find a package in a list by name.
+      //  * @param haystack a list of alpm_pkg_t
+      //  * @param needle the package name
+      //  * @return a pointer to the package if found or NULL
+      //  */
+      // alpm_pkg_t *alpm_pkg_find(alpm_list_t *haystack, const char *needle);
+      let pkg_find_in_list: Symbol<fn(*const usize, *const c_char) -> *const usize> = try!( self.lib.get(b"alpm_pkg_find") );
+
+      // /** Returns the package version as a string.
+      //  * This includes all available epoch, version, and pkgrel components. Use
+      //  * alpm_pkg_vercmp() to compare version strings if necessary.
+      //  * @param pkg a pointer to package
+      //  * @return a reference to an internal string
+      //  */
+      // const char *alpm_pkg_get_version(alpm_pkg_t *pkg);
+      let get_version: Symbol<fn(*const usize) -> *const c_char> = try!( self.lib.get(b"alpm_pkg_get_version") );
+
+      let db = get_db(self.handle);
+      let list = db_get_pkgcache(db);
+      let pkg = pkg_find_in_list(list, cs.as_ptr() as *const c_char);
+      let version_chars = get_version(pkg);
+
+      Ok(CStr::from_ptr(version_chars)
+          .to_string_lossy()
+          .into_owned())
+    }
   }
 }
 
@@ -138,7 +196,8 @@ fn translate_error_no(lib: &so::Library, error_no: usize) -> Result<String, std:
 
     let cs = alpm_strerror(error_no);
     Ok(CStr::from_ptr(cs)
-        .to_string_lossy().into_owned())
+        .to_string_lossy()
+        .into_owned())
   }
 }
 
@@ -150,6 +209,6 @@ mod tests {
   fn query_pacman() {
     let pacman = Alpm::new().unwrap();
 
-    assert_eq!("5.0.1-4".to_string(), pacman.query_package_version("pacman"));
+    assert_eq!("5.0.1-4".to_string(), pacman.query_package_version("pacman").unwrap());
   }
 }
