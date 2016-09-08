@@ -2,6 +2,7 @@
 name = "alpm"
 version = "0.1.1"
 repository = "https://github.com/dns2utf8/alpm-rs"
+documentation = "https://docs.rs/alpm/"
 license = "MIT OR Apache-2.0"
 authors = [
     "Stefan Schindler <stefan@estada.ch>",
