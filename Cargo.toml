@@ -1,6 +1,6 @@
 [package]
 name = "alpm"
-version = "0.1.0"
+version = "0.1.1"
 repository = "https://github.com/dns2utf8/alpm-rs"
 license = "MIT OR Apache-2.0"
 authors = [
