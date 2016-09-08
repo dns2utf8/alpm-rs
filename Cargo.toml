@@ -5,3 +5,5 @@ authors = ["vp"]
 
 [dependencies]
 libloading = "0.3"
+enum_primitive = "0.1"
+num = "0.1"
