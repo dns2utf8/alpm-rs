@@ -1,3 +1,18 @@
+//! Alpm is your interface to pacman from rust.
+//!
+//! It only works on an [Arch Linux](https://archlinux.org/) installation.
+//!
+//! # Example
+//!
+//! To query the current version of pacman
+//!
+//! ```rust
+//! let pacman = alpm::Alpm::new().unwrap();
+//!
+//! assert_eq!("5.0.1-4".to_string(), pacman.query_package_version("pacman").unwrap());
+//! ```
+
+
 extern crate libloading as so;
 #[macro_use] extern crate enum_primitive;
 extern crate num;
@@ -114,8 +129,10 @@ impl Alpm {
 
   /// Query for the version of a package.
   /// This will return version numbers like `4.7-2` or `5.0.1-4` or `1.10.0_patch1-1`
-  pub fn query_package_version<S>(&self, s: S) -> std::io::Result<String> where S: Into<String> {
-    let s: String = s.into();
+  ///
+  /// It behaves like `pacman -Q {query}`
+  pub fn query_package_version<S>(&self, query: S) -> std::io::Result<String> where S: Into<String> {
+    let s: String = query.into();
     let mut cs = s.into_bytes();
     cs.push(0);
 
