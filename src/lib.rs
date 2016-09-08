@@ -87,6 +87,7 @@ pub struct Alpm {
 }
 
 impl Alpm {
+  /// Load shared object
   pub fn new() -> Result<Alpm, std::io::Error> {
     let lib = try!(so::Library::new("/usr/lib/libalpm.so"));
 
@@ -111,6 +112,7 @@ impl Alpm {
     })
   }
 
+  /// Query for the version of a package
   pub fn query_package_version<S>(&self, s: S) -> std::io::Result<String> where S: Into<String> {
     let s: String = s.into();
     let mut cs = s.into_bytes();

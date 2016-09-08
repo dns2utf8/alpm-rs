@@ -1,7 +1,21 @@
 [package]
 name = "alpm"
 version = "0.1.0"
-authors = ["vp"]
+repository = "https://github.com/dns2utf8/alpm-rs"
+license = "MIT OR Apache-2.0"
+authors = [
+    "Stefan Schindler <stefan@estada.ch>",
+]
+description = "Pacman interface."
+readme = "README.md"
+keywords = ["pacman", "libalpm", "arch", "linux"]
+include = [
+    "**/*.rs",
+    "Cargo.toml",
+    "README.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE",
+]
 
 [dependencies]
 libloading = "0.3"
