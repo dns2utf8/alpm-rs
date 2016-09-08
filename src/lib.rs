@@ -112,7 +112,8 @@ impl Alpm {
     })
   }
 
-  /// Query for the version of a package
+  /// Query for the version of a package.
+  /// This will return version numbers like `4.7-2` or `5.0.1-4` or `1.10.0_patch1-1`
   pub fn query_package_version<S>(&self, s: S) -> std::io::Result<String> where S: Into<String> {
     let s: String = s.into();
     let mut cs = s.into_bytes();
@@ -181,6 +182,7 @@ impl Alpm {
 }
 
 impl Drop for Alpm {
+  /// Automatic cleanup
   fn drop(&mut self) {
     unsafe {
       let alpm_release: Symbol<unsafe extern fn(*const usize) -> *const usize> = self.lib.get(b"alpm_release\0").unwrap();
@@ -212,5 +214,19 @@ mod tests {
     let pacman = Alpm::new().unwrap();
 
     assert_eq!("5.0.1-4".to_string(), pacman.query_package_version("pacman").unwrap());
+  }
+
+  #[test]
+  fn query_usbip() {
+    let pacman = Alpm::new().unwrap();
+
+    assert_eq!("4.7-2".to_string(), pacman.query_package_version("usbip").unwrap());
+  }
+
+  #[test]
+  fn query_hdf5() {
+    let pacman = Alpm::new().unwrap();
+
+    assert_eq!("1.10.0_patch1-1".to_string(), pacman.query_package_version("hdf5").unwrap());
   }
 }
