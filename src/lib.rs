@@ -20,6 +20,7 @@ use num::FromPrimitive;
 
 use so::Symbol;
 use std::ffi::{CStr, CString};
+use std::io::{Error, ErrorKind};
 use std::os::raw::c_char;
 
 enum_from_primitive! {
@@ -133,7 +134,7 @@ impl Alpm {
   /// It behaves like `pacman -Q {query}`
   pub fn query_package_version<S>(&self, query: S) -> std::io::Result<String> where S: Into<String> {
     let s: String = query.into();
-    let mut cs = s.into_bytes();
+    let mut cs = s.as_bytes().to_vec();
     cs.push(0);
 
     unsafe {
@@ -189,11 +190,16 @@ impl Alpm {
       let db = get_db(self.handle);
       let list = db_get_pkgcache(db);
       let pkg = pkg_find_in_list(list, cs.as_ptr() as *const c_char);
-      let version_chars = get_version(pkg);
 
-      Ok(CStr::from_ptr(version_chars)
-          .to_string_lossy()
-          .into_owned())
+      if pkg != std::ptr::null() {
+        let version_chars = get_version(pkg);
+
+        Ok(CStr::from_ptr(version_chars)
+            .to_string_lossy()
+            .into_owned())
+      } else {
+        Err(Error::new(ErrorKind::Other, format!("No package {} found!", s)))
+      }
     }
   }
 }
@@ -234,10 +240,11 @@ mod tests {
   }
 
   #[test]
-  fn query_usbip() {
+  #[should_panic]
+  fn query_not_installed() {
     let pacman = Alpm::new().unwrap();
 
-    assert_eq!("4.7-2".to_string(), pacman.query_package_version("usbip").unwrap());
+    pacman.query_package_version("non-existing").unwrap();
   }
 
   #[test]
