@@ -278,7 +278,12 @@ mod tests {
 
     let pacman = Alpm::new().unwrap();
 
-    assert_eq!(Ordering::Less, pacman.vercmp("1.0-1".to_string(), "1.0-2".to_string()).unwrap());
+    assert_eq!(Ordering::Less, pacman.vercmp("1".to_string(), "1.0-2".to_string()).unwrap());
+    assert_eq!(Ordering::Less, pacman.vercmp("1.1".to_string(), "1.1.2".to_string()).unwrap());
+    assert_eq!(Ordering::Less, pacman.vercmp("1.1".to_string(), "1.2".to_string()).unwrap());
+    assert_eq!(Ordering::Less, pacman.vercmp("1.9".to_string(), "2".to_string()).unwrap());
+    assert_eq!(Ordering::Less, pacman.vercmp("1.1.10".to_string(), "2".to_string()).unwrap());
+    assert_eq!(Ordering::Less, pacman.vercmp("1".to_string(), "2".to_string()).unwrap());
   }
 
   #[test]
@@ -287,6 +292,7 @@ mod tests {
 
     let pacman = Alpm::new().unwrap();
 
+    assert_eq!(Ordering::Equal, pacman.vercmp("1.0".to_string(), "1.0-2".to_string()).unwrap());
     assert_eq!(Ordering::Equal, pacman.vercmp("1:1-1".to_string(), "1:1-1".to_string()).unwrap());
   }
 
