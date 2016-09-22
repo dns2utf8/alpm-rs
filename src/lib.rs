@@ -134,6 +134,12 @@ impl Alpm {
   /// Returns [`Ordering::Less`] if a is newer than b, [`Ordering::Equal`] if a
   /// and b are the same version, or [`Ordering::Greater`] if b is newer than a.
   pub fn vercmp(&self, a: String, b: String) -> std::io::Result<Ordering> {
+    let mut a = a.into_bytes();
+    let mut b = b.into_bytes();
+
+    a.push(0);
+    b.push(0);
+
     unsafe {
       // int alpm_pkg_vercmp(const char *a, const char *b)
       let pkg_vercmp: Symbol<fn(*const c_char, *const c_char) -> *const c_int> = try!( self.lib.get(b"alpm_pkg_vercmp") );
