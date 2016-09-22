@@ -10,3 +10,8 @@ Work in progress reverse engineering project to use the pacman backend from rust
 
 Adding more features of the backend would be nice.
 Feel free to submit issues or pull-requests.
+
+## Test infrastructure
+
+Travis will build the crate with stable, beta and nightly.
+In addition the test will be run inside a docker container with the stable compiler.

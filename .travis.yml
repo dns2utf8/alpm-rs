@@ -1,11 +1,8 @@
+sudo: required
+services:
+  - docker
+
 language: rust
-addons:
-  apt:
-    packages:
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
-      - binutils-dev
 rust:
   - stable
   - beta
@@ -16,6 +13,9 @@ matrix:
 script:
   - cargo build
   - cargo doc --no-deps
+  - if [ "$TRAVIS_RUST_VERSION" == "stable" ]; then
+    docker run --rm -it codekoala/arch sh -c "pacman -Syu --noconfirm >/dev/null 2>/dev/null && pacman -S --noconfirm git cargo hdf5 && mkdir build && cd build && git clone https://github.com/dns2utf8/alpm-rs.git && cd alpm-rs && cargo test" ;
+    fi
 notifications:
   on_success: change
   on_failure: always
