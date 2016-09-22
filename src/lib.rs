@@ -18,10 +18,11 @@ extern crate libloading as so;
 extern crate num;
 use num::FromPrimitive;
 
+use std::cmp::Ordering;
 use so::Symbol;
 use std::ffi::{CStr, CString};
 use std::io::{Error, ErrorKind};
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_int};
 
 enum_from_primitive! {
 #[repr(C)]
@@ -126,6 +127,23 @@ impl Alpm {
       handle: handle,
       error_no: error_no,
     })
+  }
+
+  /// Compare two version strings and determine which one is newer.
+  ///
+  /// Returns [`Ordering::Less`] if a is newer than b, [`Ordering::Equal`] if a
+  /// and b are the same version, or [`Ordering::Greater`] if b is newer than a.
+  pub fn vercmp(&self, a: String, b: String) -> std::io::Result<Ordering> {
+    unsafe {
+      // int alpm_pkg_vercmp(const char *a, const char *b)
+      let pkg_vercmp: Symbol<fn(*const c_char, *const c_char) -> *const c_int> = try!( self.lib.get(b"alpm_pkg_vercmp") );
+
+      let ret = pkg_vercmp(a.as_ptr() as *const c_char, b.as_ptr() as *const c_char) as i32;
+
+      Ok(if ret < 0 { Ordering::Less }
+          else if ret > 0 { Ordering::Greater }
+          else { Ordering::Equal })
+    }
   }
 
   /// Query for the version of a package.
@@ -252,5 +270,32 @@ mod tests {
     let pacman = Alpm::new().unwrap();
 
     assert_eq!("1.10.0_patch1-1".to_string(), pacman.query_package_version("hdf5").unwrap());
+  }
+
+  #[test]
+  fn vercmp_less() {
+    use std::cmp::Ordering;
+
+    let pacman = Alpm::new().unwrap();
+
+    assert_eq!(Ordering::Less, pacman.vercmp("1.0-1".to_string(), "1.0-2".to_string()).unwrap());
+  }
+
+  #[test]
+  fn vercmp_equal() {
+    use std::cmp::Ordering;
+
+    let pacman = Alpm::new().unwrap();
+
+    assert_eq!(Ordering::Equal, pacman.vercmp("1:1-1".to_string(), "1:1-1".to_string()).unwrap());
+  }
+
+  #[test]
+  fn vercmp_greater() {
+    use std::cmp::Ordering;
+
+    let pacman = Alpm::new().unwrap();
+
+    assert_eq!(Ordering::Greater, pacman.vercmp("2.0-1".to_string(), "1.0-1".to_string()).unwrap());
   }
 }
