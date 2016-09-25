@@ -106,10 +106,10 @@ pub struct Alpm {
 impl Alpm {
   /// Load shared object
   pub fn new() -> Result<Alpm, std::io::Error> {
-    let lib = try!(so::Library::new("/usr/lib/libalpm.so"));
+    let lib = try!( so::Library::new("/usr/lib/libalpm.so") );
 
-    let root = CString::new("/").unwrap();
-    let dbpath = CString::new("/var/lib/pacman/").unwrap();
+    let root   = try!( CString::new("/") );
+    let dbpath = try!( CString::new("/var/lib/pacman/") );
     let mut error_no = Box::new(0);
     let handle = unsafe {
       let init: Symbol<unsafe extern fn(*const c_char, *const c_char, *mut usize) -> *const usize> = try!(lib.get(b"alpm_initialize\0"));
@@ -134,15 +134,12 @@ impl Alpm {
   /// Returns [`Ordering::Less`] if a is newer than b, [`Ordering::Equal`] if a
   /// and b are the same version, or [`Ordering::Greater`] if b is newer than a.
   pub fn vercmp(&self, a: String, b: String) -> std::io::Result<Ordering> {
-    let mut a = a.into_bytes();
-    let mut b = b.into_bytes();
-
-    a.push(0);
-    b.push(0);
+    let a = try!( CString::new(a) );
+    let b = try!( CString::new(b) );
 
     unsafe {
       // int alpm_pkg_vercmp(const char *a, const char *b)
-      let pkg_vercmp: Symbol<fn(*const c_char, *const c_char) -> *const c_int> = try!( self.lib.get(b"alpm_pkg_vercmp") );
+      let pkg_vercmp: Symbol<fn(*const c_char, *const c_char) -> *const c_int> = try!( self.lib.get(b"alpm_pkg_vercmp\0") );
 
       let ret = pkg_vercmp(a.as_ptr() as *const c_char, b.as_ptr() as *const c_char) as i32;
 
@@ -158,8 +155,7 @@ impl Alpm {
   /// It behaves like `pacman -Q {query}`
   pub fn query_package_version<S>(&self, query: S) -> std::io::Result<String> where S: Into<String> {
     let s: String = query.into();
-    let mut cs = s.as_bytes().to_vec();
-    cs.push(0);
+    let cs = try!( CString::new(s.clone()) );
 
     unsafe {
       // /** Get the database of locally installed packages.
@@ -169,7 +165,7 @@ impl Alpm {
       //  * @return a reference to the local database
       //  */
       // alpm_db_t *alpm_get_localdb(alpm_handle_t *handle);
-      let get_db: Symbol<fn(*const usize) -> *const usize> = try!( self.lib.get(b"alpm_get_localdb") );
+      let get_db: Symbol<fn(*const usize) -> *const usize> = try!( self.lib.get(b"alpm_get_localdb\0") );
 
       // /** Get the list of sync databases.
       //  * Returns a list of alpm_db_t structures, one for each registered
@@ -184,7 +180,7 @@ impl Alpm {
       //  * @return the list of packages on success, NULL on error
       //  */
       // alpm_list_t *alpm_db_get_pkgcache(alpm_db_t *db);
-      let db_get_pkgcache: Symbol<fn(*const usize) -> *const usize> = try!( self.lib.get(b"alpm_db_get_pkgcache") );
+      let db_get_pkgcache: Symbol<fn(*const usize) -> *const usize> = try!( self.lib.get(b"alpm_db_get_pkgcache\0") );
 
       // /** Searches a database with regular expressions.
       //  * @param db pointer to the package database to search in
@@ -192,7 +188,7 @@ impl Alpm {
       //  * @return the list of packages matching all regular expressions on success, NULL on error
       //  */
       // alpm_list_t *alpm_db_search(alpm_db_t *db, const alpm_list_t *needles);
-      //let db_search: Symbol<fn(*const usize, *const usize) -> *const usize> = try!( self.lib.get(b"alpm_db_search") );
+      //let db_search: Symbol<fn(*const usize, *const usize) -> *const usize> = try!( self.lib.get(b"alpm_db_search\0") );
 
       // /** Find a package in a list by name.
       //  * @param haystack a list of alpm_pkg_t
@@ -200,7 +196,7 @@ impl Alpm {
       //  * @return a pointer to the package if found or NULL
       //  */
       // alpm_pkg_t *alpm_pkg_find(alpm_list_t *haystack, const char *needle);
-      let pkg_find_in_list: Symbol<fn(*const usize, *const c_char) -> *const usize> = try!( self.lib.get(b"alpm_pkg_find") );
+      let pkg_find_in_list: Symbol<fn(*const usize, *const c_char) -> *const usize> = try!( self.lib.get(b"alpm_pkg_find\0") );
 
       // /** Returns the package version as a string.
       //  * This includes all available epoch, version, and pkgrel components. Use
@@ -209,7 +205,7 @@ impl Alpm {
       //  * @return a reference to an internal string
       //  */
       // const char *alpm_pkg_get_version(alpm_pkg_t *pkg);
-      let get_version: Symbol<fn(*const usize) -> *const c_char> = try!( self.lib.get(b"alpm_pkg_get_version") );
+      let get_version: Symbol<fn(*const usize) -> *const c_char> = try!( self.lib.get(b"alpm_pkg_get_version\0") );
 
       let db = get_db(self.handle);
       let list = db_get_pkgcache(db);
@@ -251,6 +247,7 @@ fn translate_error_no(lib: &so::Library, error_no: usize) -> Result<String, std:
         .into_owned())
   }
 }
+
 
 #[cfg(test)]
 mod tests {
