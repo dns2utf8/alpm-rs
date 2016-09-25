@@ -112,15 +112,7 @@ impl Alpm {
   pub fn new() -> Result<Alpm, std::io::Error> {
     let lib = try!( so::Library::new("/usr/lib/libalpm.so") );
 
-    let dbpath = match Ini::load_from_file(PACMAN_CONF) {
-        Ok(conf) => {
-            match conf.section(Some("options".to_owned())).unwrap().get("DBPath") {
-                Some(path) => { try!( CString::new(path.to_string()) ) },
-                None => { try!( CString::new("/var/lib/pacman/") ) },
-            }
-        },
-        Err(_) => { try!( CString::new("/var/lib/pacman/") ) },
-    };
+    let dbpath = extract_db_path();
 
     let root = try!( CString::new("/") );
     let mut error_no = Box::new(0);
@@ -259,6 +251,16 @@ fn translate_error_no(lib: &so::Library, error_no: usize) -> Result<String, std:
         .to_string_lossy()
         .into_owned())
   }
+}
+
+fn extract_db_path() -> CString {
+  if let Ok(conf) = Ini::load_from_file(PACMAN_CONF) {
+    if let Some(path) = conf.section(Some("options".to_owned())).unwrap().get("DBPath") {
+      return CString::new(path.to_string()).unwrap();
+    }
+  }
+
+  CString::new("/var/lib/pacman/").unwrap()
 }
 
 
