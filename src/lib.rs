@@ -15,14 +15,18 @@
 
 extern crate libloading as so;
 #[macro_use] extern crate enum_primitive;
+extern crate ini;
 extern crate num;
-use num::FromPrimitive;
 
+use ini::Ini;
+use num::FromPrimitive;
 use std::cmp::Ordering;
-use so::Symbol;
 use std::ffi::{CStr, CString};
 use std::io::{Error, ErrorKind};
 use std::os::raw::{c_char, c_int};
+use so::Symbol;
+
+const PACMAN_CONF: &'static str = "/etc/pacman.conf";
 
 enum_from_primitive! {
 #[repr(C)]
@@ -108,8 +112,17 @@ impl Alpm {
   pub fn new() -> Result<Alpm, std::io::Error> {
     let lib = try!( so::Library::new("/usr/lib/libalpm.so") );
 
-    let root   = try!( CString::new("/") );
-    let dbpath = try!( CString::new("/var/lib/pacman/") );
+    let dbpath = match Ini::load_from_file(PACMAN_CONF) {
+        Ok(conf) => {
+            match conf.section(Some("options".to_owned())).unwrap().get("DBPath") {
+                Some(path) => { try!( CString::new(path.to_string()) ) },
+                None => { try!( CString::new("/var/lib/pacman/") ) },
+            }
+        },
+        Err(_) => { try!( CString::new("/var/lib/pacman/") ) },
+    };
+
+    let root = try!( CString::new("/") );
     let mut error_no = Box::new(0);
     let handle = unsafe {
       let init: Symbol<unsafe extern fn(*const c_char, *const c_char, *mut usize) -> *const usize> = try!(lib.get(b"alpm_initialize\0"));
