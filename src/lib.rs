@@ -27,6 +27,7 @@ use std::os::raw::{c_char, c_int};
 use so::Symbol;
 
 pub const PACMAN_CONF: &'static str = "/etc/pacman.conf";
+pub const PACMAN_DEFAULT_DBPATH: &'static str = "/var/lib/pacman/";
 
 enum_from_primitive! {
 #[repr(C)]
@@ -110,7 +111,7 @@ pub struct Alpm {
 impl Alpm {
   /// Create a handle with the default dbpath or what is specified in `PACMAN_CONF`
   pub fn new() -> Result<Alpm, std::io::Error> {
-    let dbpath = extract_db_path();
+    let dbpath = extract_dbpath();
     Self::with_dbpath(dbpath)
   }
 
@@ -260,14 +261,14 @@ fn translate_error_no(lib: &so::Library, error_no: usize) -> Result<String, std:
   }
 }
 
-fn extract_db_path() -> CString {
+fn extract_dbpath() -> CString {
   if let Ok(conf) = Ini::load_from_file(PACMAN_CONF) {
     if let Some(path) = conf.section(Some("options".to_owned())).unwrap().get("DBPath") {
       return CString::new(path.to_string()).unwrap();
     }
   }
 
-  CString::new("/var/lib/pacman/").unwrap()
+  CString::new(PACMAN_DEFAULT_DBPATH).unwrap()
 }
 
 
