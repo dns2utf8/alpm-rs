@@ -4,11 +4,14 @@ services:
 
 language: rust
 rust:
+  - 1.9.0
+  - 1.10.0
   - stable
   - beta
   - nightly
 matrix:
   allow_failures:
+    - rust: 1.9.0
     - rust: nightly
 script:
   - cargo build
