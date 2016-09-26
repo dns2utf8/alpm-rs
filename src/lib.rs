@@ -111,19 +111,18 @@ pub struct Alpm {
 impl Alpm {
   /// Create a handle with the default dbpath or what is specified in `PACMAN_CONF`
   pub fn new() -> Result<Alpm, std::io::Error> {
-    let dbpath = extract_dbpath();
-    Self::with_dbpath(dbpath)
+    Self::with_dbpath( extract_dbpath() )
   }
 
   /// Create a handle with a custom dbpath
-  pub fn with_dbpath(dbpath: CString) -> Result<Alpm, std::io::Error> {
+  pub fn with_dbpath(dbpath: String) -> Result<Alpm, std::io::Error> {
     let lib = try!( so::Library::new("/usr/lib/libalpm.so") );
-
 
     let root = try!( CString::new("/") );
     let mut error_no = Box::new(0);
     let handle = unsafe {
       let init: Symbol<unsafe extern fn(*const c_char, *const c_char, *mut usize) -> *const usize> = try!(lib.get(b"alpm_initialize\0"));
+      let dbpath = CString::new(dbpath).unwrap();
       init(root.as_ptr(), dbpath.as_ptr(), error_no.as_mut())
     };
     assert!(handle != 0 as *const usize,
@@ -261,14 +260,14 @@ fn translate_error_no(lib: &so::Library, error_no: usize) -> Result<String, std:
   }
 }
 
-fn extract_dbpath() -> CString {
+fn extract_dbpath() -> String {
   if let Ok(conf) = Ini::load_from_file(PACMAN_CONF) {
     if let Some(path) = conf.section(Some("options".to_owned())).unwrap().get("DBPath") {
-      return CString::new(path.to_string()).unwrap();
+      return path.to_string();
     }
   }
 
-  CString::new(PACMAN_DEFAULT_DBPATH).unwrap()
+  PACMAN_DEFAULT_DBPATH.to_string()
 }
 
 
