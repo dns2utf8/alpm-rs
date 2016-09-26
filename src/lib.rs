@@ -26,7 +26,7 @@ use std::io::{Error, ErrorKind};
 use std::os::raw::{c_char, c_int};
 use so::Symbol;
 
-const PACMAN_CONF: &'static str = "/etc/pacman.conf";
+pub const PACMAN_CONF: &'static str = "/etc/pacman.conf";
 
 enum_from_primitive! {
 #[repr(C)]
@@ -108,11 +108,16 @@ pub struct Alpm {
 }
 
 impl Alpm {
-  /// Load shared object
+  /// Create a handle with the default dbpath or what is specified in `PACMAN_CONF`
   pub fn new() -> Result<Alpm, std::io::Error> {
+    let dbpath = extract_db_path();
+    Self::with_dbpath(dbpath)
+  }
+
+  /// Create a handle with a custom dbpath
+  pub fn with_dbpath(dbpath: CString) -> Result<Alpm, std::io::Error> {
     let lib = try!( so::Library::new("/usr/lib/libalpm.so") );
 
-    let dbpath = extract_db_path();
 
     let root = try!( CString::new("/") );
     let mut error_no = Box::new(0);
@@ -132,26 +137,6 @@ impl Alpm {
       handle: handle,
       error_no: error_no,
     })
-  }
-
-  /// Compare two version strings and determine which one is newer.
-  ///
-  /// Returns [`Ordering::Less`] if a is newer than b, [`Ordering::Equal`] if a
-  /// and b are the same version, or [`Ordering::Greater`] if b is newer than a.
-  pub fn vercmp(&self, a: String, b: String) -> std::io::Result<Ordering> {
-    let a = try!( CString::new(a) );
-    let b = try!( CString::new(b) );
-
-    unsafe {
-      // int alpm_pkg_vercmp(const char *a, const char *b)
-      let pkg_vercmp: Symbol<fn(*const c_char, *const c_char) -> *const c_int> = try!( self.lib.get(b"alpm_pkg_vercmp\0") );
-
-      let ret = pkg_vercmp(a.as_ptr() as *const c_char, b.as_ptr() as *const c_char) as i32;
-
-      Ok(if ret < 0 { Ordering::Less }
-          else if ret > 0 { Ordering::Greater }
-          else { Ordering::Equal })
-    }
   }
 
   /// Query for the version of a package.
@@ -227,6 +212,28 @@ impl Alpm {
       }
     }
   }
+
+
+  /// Compare two version strings and determine which one is newer.
+  ///
+  /// Returns [`Ordering::Less`] if a is newer than b, [`Ordering::Equal`] if a
+  /// and b are the same version, or [`Ordering::Greater`] if b is newer than a.
+  pub fn vercmp(&self, a: String, b: String) -> std::io::Result<Ordering> {
+    let a = try!( CString::new(a) );
+    let b = try!( CString::new(b) );
+
+    unsafe {
+      // int alpm_pkg_vercmp(const char *a, const char *b)
+      let pkg_vercmp: Symbol<fn(*const c_char, *const c_char) -> *const c_int> = try!( self.lib.get(b"alpm_pkg_vercmp\0") );
+
+      let ret = pkg_vercmp(a.as_ptr() as *const c_char, b.as_ptr() as *const c_char) as i32;
+
+      Ok(if ret < 0 { Ordering::Less }
+          else if ret > 0 { Ordering::Greater }
+          else { Ordering::Equal })
+    }
+  }
+
 }
 
 impl Drop for Alpm {
