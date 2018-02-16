@@ -9,7 +9,7 @@
 //! ```rust
 //! let pacman = alpm::Alpm::new().unwrap();
 //!
-//! assert_eq!("5.0.1-4".to_string(), pacman.query_package_version("pacman").unwrap());
+//! assert_eq!("5.0.2-2".to_string(), pacman.query_package_version("pacman").unwrap());
 //! ```
 
 
@@ -279,7 +279,7 @@ mod tests {
   fn query_pacman() {
     let pacman = Alpm::new().unwrap();
 
-    assert_eq!("5.0.1-4".to_string(), pacman.query_package_version("pacman").unwrap());
+    assert_eq!("5.0.2-2".to_string(), pacman.query_package_version("pacman").unwrap());
   }
 
   #[test]
@@ -294,7 +294,7 @@ mod tests {
   fn query_hdf5() {
     let pacman = Alpm::new().unwrap();
 
-    assert_eq!("1.10.0_patch1-1".to_string(), pacman.query_package_version("hdf5").unwrap());
+    assert_eq!("1.10.1-2".to_string(), pacman.query_package_version("hdf5").unwrap());
   }
 
   #[test]
