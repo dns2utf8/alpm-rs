@@ -5,9 +5,6 @@ services:
 language: rust
 rust:
   - 1.16.0
-  - 1.17.0
-  - 1.18.0
-  - 1.19.0
   - 1.23.0
   - stable
   - beta
@@ -19,6 +16,7 @@ script:
   - cargo build
   - cargo doc --no-deps
   - if [ "$TRAVIS_RUST_VERSION" == "stable" ]; then
+    echo "Testing branch '$TRAVIS_BRANCH'";
     docker run --rm -it archlinux/base sh -c "pacman -Syu --noconfirm >/dev/null 2>/dev/null && pacman -S --noconfirm git cargo clang hdf5 && mkdir build && cd build && git clone --branch '$TRAVIS_BRANCH' https://github.com/dns2utf8/alpm-rs.git && cd alpm-rs && cargo test" ;
     fi
 notifications:
