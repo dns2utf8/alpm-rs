@@ -4,7 +4,6 @@ services:
 
 language: rust
 rust:
-  - 1.15.0
   - 1.16.0
   - 1.17.0
   - 1.18.0
@@ -20,7 +19,7 @@ script:
   - cargo build
   - cargo doc --no-deps
   - if [ "$TRAVIS_RUST_VERSION" == "stable" ]; then
-    docker run --rm -it codekoala/arch sh -c "pacman -Syu --noconfirm >/dev/null 2>/dev/null && pacman -S --noconfirm git cargo hdf5 && mkdir build && cd build && git clone --branch '$TRAVIS_BRANCH' https://github.com/dns2utf8/alpm-rs.git && cd alpm-rs && cargo test" ;
+    docker run --rm -it archlinux/base sh -c "pacman -Syu --noconfirm >/dev/null 2>/dev/null && pacman -S --noconfirm git cargo hdf5 && mkdir build && cd build && git clone --branch '$TRAVIS_BRANCH' https://github.com/dns2utf8/alpm-rs.git && cd alpm-rs && cargo test" ;
     fi
 notifications:
   on_success: change
