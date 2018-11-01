@@ -18,6 +18,8 @@ extern crate libloading as so;
 extern crate ini;
 extern crate num;
 
+mod version;
+
 use ini::Ini;
 use num::FromPrimitive;
 use std::cmp::Ordering;
