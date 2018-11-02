@@ -1,5 +1,5 @@
 //split EVR into release, version and release
-pub fn parse_evr<'a>(s: &'a String) -> Result<(Option<&'a str>, &'a str, Option<&'a str>), ()>{
+fn parse_evr<'a>(s: &'a str) -> Result<(Option<&'a str>, &'a str, Option<&'a str>), ()>{
 
     //ranges for the parts of the string
     //the second value of the tuple is the index of the last char
