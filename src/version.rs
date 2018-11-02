@@ -5,7 +5,7 @@ fn parse_evr<'a>(s: &'a str) -> Result<(Option<&'a str>, &'a str, Option<&'a str
     //the second value of the tuple is the index of the last char
     let mut epoche: Option<(&str, usize)> = None;
     let mut version: Option<(&str, usize)> = None;
-    //doesnt need an endpoint as its the last part
+    //doesnt need an endpoint as its the last part of the string
     let mut release: Option<&str> = None;
 
     for c in s.char_indices(){
