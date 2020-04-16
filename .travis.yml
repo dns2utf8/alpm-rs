@@ -4,8 +4,6 @@ services:
 
 language: rust
 rust:
-  - 1.16.0
-  - 1.23.0
   - stable
   - beta
   - nightly
