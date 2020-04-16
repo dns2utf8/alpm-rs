@@ -1,5 +1,9 @@
 # alpm-rs
 
+This project has been superseeded by https://github.com/Morganamilo/alpm.rs
+
+# Archived project!
+
 Work in progress reverse engineering project to use the pacman backend from rust.
 
 [![crats.io](https://img.shields.io/crates/v/alpm.svg)](https://crates.io/crates/alpm)
